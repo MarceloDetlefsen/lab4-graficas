@@ -1,8 +1,10 @@
 mod framebuffer;
 mod line;
+mod obj;
 
 use framebuffer::Framebuffer;
-use line::{point, triangle};
+use line::triangle;
+use obj::load_obj;
 use raylib::prelude::*;
 
 /// Función que recibe un Vector3 e imprime sus tres componentes.
@@ -11,28 +13,38 @@ fn imprimir_vertice(v: Vector3) {
 }
 
 fn main() {
-    // --- Ejercicio con vectores ---
-    let v1 = Vector2::new(100.0, 200.0);
-    println!("Primer vértice (Vector2): ({}, {})", v1.x, v1.y);
+    // ----------------------------------------------------------------
+    // 1. Probar el cargador OBJ con un modelo pequeño (assets/cube.obj)
+    // ----------------------------------------------------------------
+    let cube_path = "assets/cube.obj";
+    println!("=== Cargando '{}' ===", cube_path);
+    let cube = load_obj(cube_path).expect("No se pudo leer assets/cube.obj");
 
-    let v2 = Vector3::new(3.0, 5.0, -2.0);
-    println!("Componentes individuales del segundo vértice (Vector3):");
-    println!("  x = {}", v2.x);
-    println!("  y = {}", v2.y);
-    println!("  z = {}", v2.z);
+    println!("¿Cuántos vértices cargaron?: {}", cube.vertices.len());
+    println!("¿Cuántos índices cargaron?: {}", cube.indices.len());
+    println!("Total de triángulos: {}", cube.indices.len() / 3);
 
-    println!("\nLlamando a imprimir_vertice:");
-    imprimir_vertice(v2);
+    // Recuperar los tres vértices del primer triángulo usando sus índices
+    if cube.indices.len() >= 3 {
+        let i0 = cube.indices[0];
+        let i1 = cube.indices[1];
+        let i2 = cube.indices[2];
 
-    // --- Framebuffer ---
+        println!("\nPrimer triángulo (índices en Vec: [{}, {}, {}]):", i0, i1, i2);
+        print!("  Vértice A: ");
+        imprimir_vertice(cube.vertices[i0]);
+        print!("  Vértice B: ");
+        imprimir_vertice(cube.vertices[i1]);
+        print!("  Vértice C: ");
+        imprimir_vertice(cube.vertices[i2]);
+    }
+
+    // ----------------------------------------------------------------
+    // 2. Renderizado en Framebuffer (ejercicios anteriores)
+    // ----------------------------------------------------------------
     let mut framebuffer = Framebuffer::new(800, 600, Color::BLACK);
     framebuffer.clear();
 
-    // Dibujar un punto usando Vector2
-    framebuffer.set_current_color(Color::RED);
-    point(&mut framebuffer, v1);
-
-    // --- Dibujar triángulo ---
     let a = Vector2::new(320.0, 100.0);
     let b = Vector2::new(150.0, 350.0);
     let c = Vector2::new(500.0, 350.0);
@@ -40,15 +52,7 @@ fn main() {
     framebuffer.set_current_color(Color::GREEN);
     triangle(&mut framebuffer, a, b, c);
 
-    // Triángulo adicional para probar distinta escala y orientación
-    let d = Vector2::new(600.0, 120.0);
-    let e = Vector2::new(720.0, 260.0);
-    let f = Vector2::new(550.0, 300.0);
-
-    framebuffer.set_current_color(Color::SKYBLUE);
-    triangle(&mut framebuffer, d, e, f);
-
     let output_file = "out.bmp";
     framebuffer.render_to_file(output_file);
-    println!("\nTriángulo(s) dibujados exitosamente y exportados a '{}'", output_file);
+    println!("\nTriángulo de prueba exportado a '{}'", output_file);
 }
