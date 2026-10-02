@@ -2,7 +2,11 @@
 
 Implementación de un renderer 3D por software desarrollado desde cero en Rust con `raylib`, capaz de leer y parsear archivos Wavefront `.obj` triangulados, proyectar su geometría y dibujar todos sus triángulos en wireframe sobre un framebuffer propio en memoria.
 
-![Nave renderizada](render.png)
+### Comparativa de Resultados
+
+| Modelo en Blender | Renderizado por Software (Rust) |
+| :---: | :---: |
+| ![Modelo en Blender](blender.png) | ![Renderizado por Software](render.png) |
 
 ## Descripción
 
@@ -72,6 +76,7 @@ Exportación de imagen (render.png)
 ```
 .
 ├── README.md       # Documentación del proyecto, pipeline y notas de diseño
+├── blender.png     # Captura del modelo de referencia en Blender
 ├── render.png      # Captura generada del modelo 3D renderizado
 ├── Cargo.toml      # Configuración del crate, optimizaciones y dependencias
 ├── Cargo.lock      # Versiones bloqueadas de dependencias
