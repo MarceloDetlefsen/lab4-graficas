@@ -56,7 +56,7 @@ fn main() {
     // 6. Renderizar y exportar
     render_obj(&mut framebuffer, &obj, scale, offset);
 
-    let output_file = "out.bmp";
+    let output_file = "render.png";
     framebuffer.render_to_file(output_file);
     println!("Imagen exportada exitosamente a '{}'", output_file);
 }
