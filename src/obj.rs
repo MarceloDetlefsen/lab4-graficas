@@ -21,6 +21,28 @@ impl Obj {
     pub fn load(path: &str) -> io::Result<Self> {
         load_obj(path)
     }
+
+    /// Calcula la caja envolvente (bounding box) del modelo devolviendo (min, max).
+    pub fn bounds(&self) -> (Vector3, Vector3) {
+        if self.vertices.is_empty() {
+            return (Vector3::zero(), Vector3::zero());
+        }
+
+        let mut min = Vector3::new(f32::MAX, f32::MAX, f32::MAX);
+        let mut max = Vector3::new(f32::MIN, f32::MIN, f32::MIN);
+
+        for v in &self.vertices {
+            min.x = min.x.min(v.x);
+            min.y = min.y.min(v.y);
+            min.z = min.z.min(v.z);
+
+            max.x = max.x.max(v.x);
+            max.y = max.y.max(v.y);
+            max.z = max.z.max(v.z);
+        }
+
+        (min, max)
+    }
 }
 
 /// Carga un archivo OBJ reconociendo vértices ('v') y caras ('f').

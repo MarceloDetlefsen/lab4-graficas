@@ -31,3 +31,34 @@ pub fn render_obj(framebuffer: &mut Framebuffer, obj: &Obj, scale: f32, offset: 
         triangle(framebuffer, p0, p1, p2);
     }
 }
+
+/// Calcula escala y offset para centrar y ajustar el modelo a la pantalla conservando proporciones.
+/// Ocupa como máximo (1.0 - margin) del ancho y alto del framebuffer.
+pub fn fit_to_screen(obj: &Obj, width: u32, height: u32, margin: f32) -> (f32, Vector2) {
+    let (min, max) = obj.bounds();
+    let model_width = max.x - min.x;
+    let model_height = max.y - min.y;
+
+    let target_w = width as f32 * (1.0 - margin);
+    let target_h = height as f32 * (1.0 - margin);
+
+    let scale_x = if model_width > 0.0 { target_w / model_width } else { 1.0 };
+    let scale_y = if model_height > 0.0 { target_h / model_height } else { 1.0 };
+    let scale = scale_x.min(scale_y);
+
+    let center_x = (min.x + max.x) / 2.0;
+    let center_y = (min.y + max.y) / 2.0;
+
+    let screen_center_x = width as f32 / 2.0;
+    let screen_center_y = height as f32 / 2.0;
+
+    // Dado que to_screen aplica:
+    //   x_pantalla =  v.x * scale + offset.x  =>  offset.x = screen_center_x - center_x * scale
+    //   y_pantalla = -v.y * scale + offset.y  =>  offset.y = screen_center_y + center_y * scale
+    let offset = Vector2::new(
+        screen_center_x - center_x * scale,
+        screen_center_y + center_y * scale,
+    );
+
+    (scale, offset)
+}
