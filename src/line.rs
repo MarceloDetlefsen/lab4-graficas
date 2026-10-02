@@ -52,3 +52,11 @@ pub fn draw_poligon(framebuffer: &mut Framebuffer, points: &[Vector2]) {
 
     line(framebuffer, points[points.len() - 1], points[0]);
 }
+
+pub fn triangle(framebuffer: &mut Framebuffer, a: Vector2, b: Vector2, c: Vector2) {
+    line(framebuffer, a, b);
+    line(framebuffer, b, c);
+    line(framebuffer, c, a);
+}
+
+pub use crate::framebuffer::point;
