@@ -8,87 +8,84 @@ use line::triangle;
 use obj::load_obj;
 use raylib::prelude::*;
 
-/// Función que recibe un Vector3 e imprime sus tres componentes.
-fn imprimir_vertice(v: Vector3) {
-    println!("Vector3 -> x: {:.4}, y: {:.4}, z: {:.4}", v.x, v.y, v.z);
-}
-
 fn main() {
-    // ----------------------------------------------------------------
-    // 1. Cargar y verificar el modelo Nave.obj (assets/Nave.obj)
-    // ----------------------------------------------------------------
     let nave_path = "assets/Nave.obj";
     println!("========================================");
     println!("Cargando modelo 3D: '{}'", nave_path);
     println!("========================================");
 
-    let start_time = Instant::now();
+    let start_load = Instant::now();
     let nave = load_obj(nave_path).expect("No se pudo leer assets/Nave.obj");
-    let elapsed = start_time.elapsed();
+    println!("Tiempo de carga: {:?}", start_load.elapsed());
+    println!("Vértices: {}", nave.vertices.len());
+    println!("Triángulos: {}", nave.indices.len() / 3);
 
-    println!("Tiempo de carga: {:?}", elapsed);
-    println!("Total de vértices cargados: {}", nave.vertices.len());
-    println!("Total de índices cargados:  {}", nave.indices.len());
-    let total_triangulos = nave.indices.len() / 3;
-    println!("Total de triángulos:        {}", total_triangulos);
-
-    // Verificación de límites (asegurar que todos los índices sean válidos)
-    let max_indice = nave.indices.iter().copied().max().unwrap_or(0);
-    println!("Índice máximo referenciado: {} (de {} disponibles)", max_indice, nave.vertices.len());
-    assert!(max_indice < nave.vertices.len(), "¡Error: Hay índices fuera de rango!");
-
-    // Bounding box (caja envolvente del modelo)
+    // Calcular el bounding box para centrar y escalar el modelo adecuadamente
     let mut min_x = f32::MAX;
     let mut max_x = f32::MIN;
     let mut min_y = f32::MAX;
     let mut max_y = f32::MIN;
-    let mut min_z = f32::MAX;
-    let mut max_z = f32::MIN;
 
     for v in &nave.vertices {
         min_x = min_x.min(v.x);
         max_x = max_x.max(v.x);
         min_y = min_y.min(v.y);
         max_y = max_y.max(v.y);
-        min_z = min_z.min(v.z);
-        max_z = max_z.max(v.z);
     }
 
-    println!("\nDimensiones / Bounding Box de la Nave:");
-    println!("  X: [{:.3}, {:.3}] (Ancho:  {:.3})", min_x, max_x, max_x - min_x);
-    println!("  Y: [{:.3}, {:.3}] (Alto:   {:.3})", min_y, max_y, max_y - min_y);
-    println!("  Z: [{:.3}, {:.3}] (Prof.:  {:.3})", min_z, max_z, max_z - min_z);
+    let model_width = max_x - min_x;
+    let model_height = max_y - min_y;
+    let center_x = (min_x + max_x) / 2.0;
+    let center_y = (min_y + max_y) / 2.0;
 
-    // Muestra de los primeros 3 triángulos con sus vértices recuperados
-    println!("\nPrimeros 3 triángulos cargados:");
-    for tri_idx in 0..3.min(total_triangulos) {
-        let i0 = nave.indices[tri_idx * 3];
-        let i1 = nave.indices[tri_idx * 3 + 1];
-        let i2 = nave.indices[tri_idx * 3 + 2];
+    let width = 800;
+    let height = 600;
+    let padding = 50.0;
 
-        println!("  Triángulo #{}: índices [{}, {}, {}]", tri_idx + 1, i0, i1, i2);
-        print!("    A: ");
-        imprimir_vertice(nave.vertices[i0]);
-        print!("    B: ");
-        imprimir_vertice(nave.vertices[i1]);
-        print!("    C: ");
-        imprimir_vertice(nave.vertices[i2]);
-    }
+    // Escala uniforme manteniendo la relación de aspecto
+    let scale_x = (width as f32 - 2.0 * padding) / model_width;
+    let scale_y = (height as f32 - 2.0 * padding) / model_height;
+    let scale = scale_x.min(scale_y);
 
-    // ----------------------------------------------------------------
-    // 2. Renderizado en Framebuffer de prueba
-    // ----------------------------------------------------------------
-    let mut framebuffer = Framebuffer::new(800, 600, Color::BLACK);
+    let offset_x = width as f32 / 2.0;
+    let offset_y = height as f32 / 2.0;
+
+    println!("\nParámetros de proyección 2D:");
+    println!("  Centro modelo: ({:.3}, {:.3})", center_x, center_y);
+    println!("  Dimensiones:   {:.3} x {:.3}", model_width, model_height);
+    println!("  Factor escala: {:.3}", scale);
+
+    // Transformar los vértices 3D a coordenadas 2D de pantalla (escalados y trasladados)
+    let vertices_2d: Vec<Vector2> = nave
+        .vertices
+        .iter()
+        .map(|v| {
+            Vector2::new(
+                (v.x - center_x) * scale + offset_x,
+                offset_y - (v.y - center_y) * scale, // Invertir Y para que coincida con coordenadas cartesianas
+            )
+        })
+        .collect();
+
+    // Preparar el framebuffer
+    let mut framebuffer = Framebuffer::new(width, height, Color::BLACK);
     framebuffer.clear();
+    framebuffer.set_current_color(Color::WHITE);
 
-    let a = Vector2::new(320.0, 100.0);
-    let b = Vector2::new(150.0, 350.0);
-    let c = Vector2::new(500.0, 350.0);
+    println!("\nDibujando triángulos en wireframe...");
+    let start_render = Instant::now();
 
-    framebuffer.set_current_color(Color::GREEN);
-    triangle(&mut framebuffer, a, b, c);
+    // Dibujar cada triángulo usando directamente nuestra función `triangle`
+    for chunk in nave.indices.chunks_exact(3) {
+        let a = vertices_2d[chunk[0]];
+        let b = vertices_2d[chunk[1]];
+        let c = vertices_2d[chunk[2]];
+        triangle(&mut framebuffer, a, b, c);
+    }
+
+    println!("Tiempo de renderizado: {:?}", start_render.elapsed());
 
     let output_file = "out.bmp";
     framebuffer.render_to_file(output_file);
-    println!("\nFramebuffer de prueba exportado a '{}'", output_file);
+    println!("Modelo renderizado exitosamente y exportado a '{}'", output_file);
 }
