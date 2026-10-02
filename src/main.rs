@@ -1,6 +1,7 @@
 mod framebuffer;
 mod line;
 mod obj;
+mod render;
 
 use std::time::Instant;
 use framebuffer::Framebuffer;
