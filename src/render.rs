@@ -5,6 +5,8 @@ use crate::line::triangle;
 use crate::obj::Obj;
 use raylib::prelude::{Color, Vector2, Vector3};
 
+pub const LINE_COLOR: Color = Color::new(240, 130, 40, 255);
+
 /// Proyecta un vértice 3D a coordenadas 2D de pantalla usando únicamente sus componentes X e Y.
 /// En el espacio de modelado 3D el eje Y positivo apunta hacia arriba, mientras que en coordenadas
 /// de pantalla el eje Y crece hacia abajo; por esta razón se invierte el signo de Y (-v.y).
@@ -17,7 +19,7 @@ pub fn to_screen(v: Vector3, scale: f32, offset: Vector2) -> Vector2 {
 
 /// Renderiza en wireframe todos los triángulos de un objeto OBJ proyectados a 2D.
 pub fn render_obj(framebuffer: &mut Framebuffer, obj: &Obj, scale: f32, offset: Vector2) {
-    framebuffer.set_current_color(Color::WHITE);
+    framebuffer.set_current_color(LINE_COLOR);
 
     for chunk in obj.indices.chunks_exact(3) {
         let v0 = obj.vertices[chunk[0]];

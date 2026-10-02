@@ -50,7 +50,7 @@ fn main() {
     let height = 600;
     let (scale, offset) = fit_to_screen(&obj, width, height, 0.1);
 
-    let mut framebuffer = Framebuffer::new(width, height, Color::BLACK);
+    let mut framebuffer = Framebuffer::new(width, height, Color::new(15, 18, 28, 255));
     framebuffer.clear();
 
     // 6. Renderizar y exportar
